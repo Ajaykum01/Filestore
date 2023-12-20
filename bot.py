@@ -36,6 +36,11 @@ from handlers.save_media import (
     save_batch_media_in_channel
 )
 
+from aiohttp import web
+from plugins import web_server
+
+PORT = "8080"
+
 MediaList = {}
 
 Bot = Client(
@@ -101,7 +106,11 @@ async def start(bot: Client, cmd: Message):
         except Exception as err:
             await cmd.reply_text(f"Something went wrong!\n\n**Error:** `{err}`")
 
-
+        app = web.AppRunner(await web_server())
+        await app.setup()
+        bind_address = "0.0.0.0"
+        await web.TCPSite(app, bind_address, PORT).start()
+        
 @Bot.on_message((filters.document | filters.video | filters.audio | filters.photo) & ~filters.chat(Config.DB_CHANNEL))
 async def main(bot: Client, message: Message):
 
